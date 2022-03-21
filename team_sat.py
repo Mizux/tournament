@@ -3,6 +3,73 @@
 import argparse
 from ortools.sat.python import cp_model
 
+class PlayersPartialSolutionPrinter(cp_model.CpSolverSolutionCallback):
+    """Print intermediate solutions."""
+    def __init__(self, games, num_players, num_turns, num_games, limit):
+        cp_model.CpSolverSolutionCallback.__init__(self)
+        self._games = games
+        self._num_players = num_players
+        self._num_turns = num_turns
+        self._num_games = num_games
+        self._solution_count = 0
+        self._solution_limit = limit
+
+
+    def on_solution_callback(self):
+        """Print the current solution."""
+        self._solution_count += 1
+        print(f'Solution {self._solution_count}')
+        self.print_schedule()
+        self.print_player_stat()
+        if self._solution_count >= self._solution_limit:
+            print(f'Stop search after {self._solution_limit} solutions')
+            self.StopSearch()
+
+
+    def print_schedule(self):
+        """Print the tournament schedule"""
+        print(' '.ljust(11), ' '.join([f'game {i:2}'.rjust(8) for i in range(self._num_games)]))
+        for turn in range(self._num_turns):
+            games = {}
+            for game in range(self._num_games):
+                games[game] = []
+                for player in range(self._num_players):
+                    if self.Value(self._games[(player, turn, game)]):
+                        #print(f'  player {player} plays game {game}')
+                        games[game].append(player)
+            str_games = [f'{v}'.rjust(8) for v in games.values()]
+            print(f' Turn {turn:4}:', ' '.join(str_games) )
+
+
+    def print_player_stat(self):
+        """Print stat per player
+        if turn < num_player/2 then each player won't play against all
+        others and won't play all games.
+        """
+        for player in range(self._num_players):
+            games = []
+            opponents = []
+            for game in range(self._num_games): # game will be sorted
+                for turn in range(self._num_turns):
+                    if self.Value(self._games[(player, turn, game)]): # play this game
+                        games.append(game)
+                        # Find the opponent(s) aka players playing this turn, this game
+                        for opponent in range(self._num_players):
+                            if opponent == player:
+                                continue
+                            if self.Value(self._games[(opponent, turn, game)]):
+                                opponents.append(opponent)
+
+            opponents.sort()
+            print(f' Player {player:2}: games:{games} opponents:{opponents}')
+
+
+    def solution_count(self):
+        """Return number of solution found so far."""
+        return self._solution_count
+
+
+
 def main():
     """Entry point of the program"""
     parser = argparse.ArgumentParser(description='Compute tournament schedule.')
@@ -83,39 +150,6 @@ def main():
     solver.parameters.linearization_level = 2
     # Enumerate all solutions.
     solver.parameters.enumerate_all_solutions = True
-
-    class PlayersPartialSolutionPrinter(cp_model.CpSolverSolutionCallback):
-        """Print intermediate solutions."""
-        def __init__(self, games, num_players, num_turns, num_games, limit):
-            cp_model.CpSolverSolutionCallback.__init__(self)
-            self._games = games
-            self._num_players = num_players
-            self._num_turns = num_turns
-            self._num_games = num_games
-            self._solution_count = 0
-            self._solution_limit = limit
-
-        def on_solution_callback(self):
-            """Print the current solution."""
-            self._solution_count += 1
-            print(f'Solution {self._solution_count}', ' '.join([f'game {i:03}' for i in range(num_games)]))
-            for turn in range(self._num_turns):
-                games = {}
-                for game in range(self._num_games):
-                    games[game] = []
-                    for player in range(self._num_players):
-                        if self.Value(self._games[(player, turn, game)]):
-                            #print(f'  player {player} plays game {game}')
-                            games[game].append(player)
-                str_games = [f'  {v}' for v in games.values()]
-                print(f' turn {turn}: ', ' '.join(str_games) )
-            if self._solution_count >= self._solution_limit:
-                print(f'Stop search after {self._solution_limit} solutions')
-                self.StopSearch()
-
-        def solution_count(self):
-            """Return number of solution found so far."""
-            return self._solution_count
 
     # Display the first five solutions.
     solution_limit = 3
