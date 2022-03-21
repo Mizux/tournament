@@ -98,7 +98,7 @@ def main():
         def on_solution_callback(self):
             """Print the current solution."""
             self._solution_count += 1
-            print(f'Solution {self._solution_count}')
+            print(f'Solution {self._solution_count}', ' '.join([f'game {i:03}' for i in range(num_games)]))
             for turn in range(self._num_turns):
                 games = {}
                 for game in range(self._num_games):
@@ -107,7 +107,8 @@ def main():
                         if self.Value(self._games[(player, turn, game)]):
                             #print(f'  player {player} plays game {game}')
                             games[game].append(player)
-                print(f' turn {turn}: {list(games.values())}')
+                str_games = [f'  {v}' for v in games.values()]
+                print(f' turn {turn}: ', ' '.join(str_games) )
             if self._solution_count >= self._solution_limit:
                 print(f'Stop search after {self._solution_limit} solutions')
                 self.StopSearch()
