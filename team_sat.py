@@ -52,6 +52,10 @@ def main(n):
                     tmp.append(b_var)
             model.AddAtMostOne(tmp)
 
+    # [Optional] Force first turn to be in order 0 vs 1, 2 vs 3, 3 vs 4 ....
+    for player in all_players:
+        model.Add(games[player, 0, player // 2] == 1)
+
     # Creates the solver and solve.
     solver = cp_model.CpSolver()
     solver.parameters.linearization_level = 2
