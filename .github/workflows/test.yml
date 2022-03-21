@@ -1,0 +1,14 @@
+name: Python3 test
+
+on: [push, pull_request]
+
+jobs:
+  # Building using the github runner environement directly.
+  python3:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install python3 ortools
+      run: python3 -m pip install ortools
+    - name: Test
+      run: python3 team_sat.py
