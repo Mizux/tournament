@@ -74,11 +74,14 @@ def main(n):
             self._solution_count += 1
             print(f'Solution {self._solution_count}')
             for turn in range(self._num_turns):
-                print(f' turn {turn}')
+                games = dict()
                 for game in range(self._num_games):
+                    games[game] = []
                     for player in range(self._num_players):
                         if self.Value(self._games[(player, turn, game)]):
-                            print(f'  player {player} plays game {game}')
+                            #print(f'  player {player} plays game {game}')
+                            games[game].append(player)
+                print(f' turn {turn}: {list(games.values())}')
             if self._solution_count >= self._solution_limit:
                 print(f'Stop search after {self._solution_limit} solutions')
                 self.StopSearch()
@@ -105,4 +108,4 @@ def main(n):
 
 
 if __name__ == '__main__':
-    main(n=4)
+    main(n=6)
