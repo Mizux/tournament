@@ -1,21 +1,43 @@
 #!/usr/bin/env python3
 """Example of a simple player scheduling problem."""
+import argparse
 from ortools.sat.python import cp_model
 
-def main(n):
+def main():
+    """Entry point of the program"""
+    parser = argparse.ArgumentParser(description='Compute tournament schedule.')
+    parser.add_argument('--players',
+                        '-p',
+                        default=12,
+                        type=int,
+                        help='number of players, must be even (default:12)')
+    parser.add_argument('--turns',
+                        '-t',
+                        default=6,
+                        type=int,
+                        help='number of turns (max players / 2) (default:6)')
+    args = vars(parser.parse_args())
+
+
     # Data.
-    num_players = 2 * n
-    num_turns = n
-    num_games = n
-    all_players = range(num_players)
-    all_turns = range(num_turns)
-    all_games = range(num_games)
+    num_players = args['players']
+    if num_players % 2 != 0:
+        print(f"ERROR: num players must be even (here {num_players})")
+        exit(2)
+
+    num_turns = min(args['turns'], num_players // 2)
+
+    num_games = args['players'] // 2
+    print(f"players: {num_players}, turns: {num_turns}, games per turn: {num_games}")
 
     # Creates the model.
     model = cp_model.CpModel()
 
     # Creates games variables.
-    # games[(t, r, g)]: player 't' play on turn 'r' the game 'g'.
+    all_players = range(num_players)
+    all_turns = range(num_turns)
+    all_games = range(num_games)
+    # games[(p, t, g)]: player 'p' play on turn 't' the game 'g'.
     games = {}
     for player in all_players:
         for turn in all_turns:
@@ -38,7 +60,7 @@ def main(n):
     # Each player plays at most one the n-th game.
     for player in all_players:
         for game in all_games:
-            model.AddExactlyOne(games[(player, turn, game)] for turn in all_turns)
+            model.AddAtMostOne(games[(player, turn, game)] for turn in all_turns)
 
     # Each player plays at most one game against other players.
     for p_1 in all_players:
@@ -53,8 +75,8 @@ def main(n):
             model.AddAtMostOne(tmp)
 
     # [Optional] Force first turn to be in order 0 vs 1, 2 vs 3, 3 vs 4 ....
-    for player in all_players:
-        model.Add(games[player, 0, player // 2] == 1)
+    #for player in all_players:
+    #    model.Add(games[player, 0, player // 2] == 1)
 
     # Creates the solver and solve.
     solver = cp_model.CpSolver()
@@ -78,7 +100,7 @@ def main(n):
             self._solution_count += 1
             print(f'Solution {self._solution_count}')
             for turn in range(self._num_turns):
-                games = dict()
+                games = {}
                 for game in range(self._num_games):
                     games[game] = []
                     for player in range(self._num_players):
@@ -104,7 +126,7 @@ def main(n):
     solver.Solve(model, solution_printer)
 
     # Statistics.
-    print('\nStatistics:')
+    print('\nSolver Statistics:')
     print(f'- conflicts      : {solver.NumConflicts()}')
     print(f'- branches       : {solver.NumBranches()}')
     print(f'- wall time      : {solver.WallTime()} s')
@@ -112,4 +134,4 @@ def main(n):
 
 
 if __name__ == '__main__':
-    main(n=6)
+    main()
