@@ -82,7 +82,7 @@ def main():
                         '-t',
                         default=6,
                         type=int,
-                        help='number of turns (max players / 2) (default:6)')
+                        help='number of turns (max: players / 2) (default:6)')
     args = vars(parser.parse_args())
 
 
