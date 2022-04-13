@@ -17,7 +17,7 @@ options:
   --players PLAYERS, -p PLAYERS
                         number of players, must be even (default:12)
   --turns TURNS, -t TURNS
-                        number of turns (max players / 2) (default:6)
+                        number of turns (max: players / 2) (default:6)
 ```
 
 ## Sample
